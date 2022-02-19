@@ -1,0 +1,20 @@
+[package]
+name = "signature-server"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+serde_derive = "1.0.136"
+ethers = "0.6.2" # this only compiles on linux
+warp = "0.3.2"
+serde = "1.0.136"
+hex = "0.4.3"
+sha3 = "0.10.1"
+log = "0.4.14"
+pretty_env_logger = "0.4.0"
+
+[dependencies.tokio]
+version = "1.17.0"
+features = ["full"]
