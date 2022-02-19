@@ -11,32 +11,6 @@ mod model;
 
 #[tokio::main]
 async fn main() {
-    if env::var_os("SIGNING_KEY").is_none() {
-        // Set `SIGNING_KEY=keccak256("s1gning_key")` if a signing key was not provided
-        env::set_var(
-            "SIGNING_KEY",
-            "d4b9e7ae8585ef740d9fa79ed53eb63d59bff149fdb8c20527ad62e1e0fbba50", // keccak256("s1gning_key")
-        );
-    }
-
-    if env::var_os("RUST_LOG").is_none() {
-        // Set `RUST_LOG=signature_server=debug` to see debug logs,
-        // this only shows access logs.
-        env::set_var("SIGNING_KEY", "signature_server=debug");
-    }
-
-    pretty_env_logger::init();
-
-    let private_key = env::var("SIGNING_KEY").unwrap();
-    let signer = LocalWallet::from_str(&private_key).unwrap();
-
-    let api = filters::all(Arc::new(signer));
-
-    // View access logs by setting `RUST_LOG=signature_server`.
-    let routes = api.with(warp::log("signature_server"));
-
-    // Start up the server...
-    warp::serve(routes).run(([0; 4], 3030)).await;
 }
 
 #[cfg(test)]
