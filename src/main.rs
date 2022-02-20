@@ -21,7 +21,7 @@ async fn main() {
     if env::var_os("RUST_LOG").is_none() {
         // Set `RUST_LOG=signature_server=debug` to see debug logs,
         // this only shows access logs.
-        env::set_var("SIGNING_KEY", "signature_server=debug");
+        env::set_var("RUST_LOG", "signature_server=debug");
     }
 
     pretty_env_logger::init();
