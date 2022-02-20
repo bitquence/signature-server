@@ -8,6 +8,10 @@ Heavily inspired by [warp's todo example API](https://github.com/seanmonstar/war
 
 ### Todo List
 - [x] Types that resemble `ethers`'s Signature type with deserialization to convert fields into hex strings 
+<<<<<<< HEAD
 - [ ] [Error handling using rejections instead of `Result::unwrap`](https://github.com/seanmonstar/warp/pull/458)
+=======
+- [ ] Error handling using rejections instead of `Result::unwrap`
+>>>>>>> 97960caa60b6b3d4db5d6874226dfd145ec478d2
 - [ ] Whitelisted user support using ECDSA or Merkle Trees
 - [ ] Nonces / Database for invalidating signatures after on-chain use
