@@ -11,7 +11,7 @@ pub fn all(
     sign(signer)
 }
 
-/// POST /sign with JSON `{address: "0x0000000000000000000000000000000000000001", quantity: "2"}`
+/// POST /sign with JSON `{address: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045", quantity: "2"}`
 pub fn sign(
     signer: SignerWallet,
 ) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {

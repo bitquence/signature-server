@@ -44,7 +44,7 @@ mod tests {
     use ethers::{
         abi::Tokenizable,
         signers::{LocalWallet, Signer},
-        types::{Signature as EthersSignature, U256},
+        types::{Address, Signature as EthersSignature, U256},
     };
     use serde_derive::{Deserialize, Serialize};
     use sha3::{Digest, Keccak256};
@@ -116,24 +116,10 @@ mod tests {
         assert_eq!(recovered, signer.address());
     }
 
-    // fn deserialize_resp<T, B>(res: Response<B>) -> serde_json::Result<Response<T>>
-    // where
-    //     for<'de> T: serde::Deserialize<'de>,
-    //     B: AsRef<[u8]>
-    // {
-    //     let (parts, body) = res.into_parts();
-    //     let body = serde_json::from_slice(body.as_ref())?;
-    //     Ok(Response::from_parts(parts, body))
-    // }
-
     fn make_body() -> SignatureRequest {
-        let address = [
-            145u8, 178, 111, 255, 255, 179, 37, 225, 63, 30, 245, 146, 176, 147, 54, 150, 9, 128,
-            68, 175,
-        ];
         SignatureRequest {
-            address: address.into(),
-            quantity: (2 as i8).into(),
+            address: Address::from_str("0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045").unwrap(),
+            quantity: U256::from(2 as i8),
         }
     }
 }
