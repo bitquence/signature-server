@@ -2341,6 +2341,7 @@ dependencies = [
  "pretty_env_logger",
  "serde",
  "serde_derive",
+ "serde_json",
  "sha3 0.10.1",
  "tokio",
  "warp",

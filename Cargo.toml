@@ -7,7 +7,10 @@ edition = "2021"
 
 [dependencies]
 serde_derive = "1.0.136"
-ethers = "0.6.2" # this only compiles on linux
+serde_json = "1.0.79"
+# for windows (?)
+# ethers = { git = "https://github.com/gakonst/ethers-rs", features = ["legacy"] }
+ethers = "0.6.2"
 warp = "0.3.2"
 serde = "1.0.136"
 hex = "0.4.3"

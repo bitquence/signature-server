@@ -1,5 +1,4 @@
 use ethers::signers::LocalWallet;
-use sha3::{Digest, Keccak256};
 use std::env;
 use std::str::FromStr;
 use std::sync::Arc;
@@ -28,31 +27,42 @@ async fn main() {
     pretty_env_logger::init();
 
     let private_key = env::var("SIGNING_KEY").unwrap();
-    let signer = LocalWallet::from_str(&private_key).unwrap();
+    let signer = Arc::new(LocalWallet::from_str(&private_key).unwrap());
 
-    let api = filters::all(Arc::new(signer));
+    let api = filters::all(signer);
 
     // View access logs by setting `RUST_LOG=signature_server`.
     let routes = api.with(warp::log("signature_server"));
 
     // Start up the server...
-    warp::serve(routes).run(([0; 4], 3030)).await;
+    warp::serve(routes).run(([127, 0, 0, 1], 3030)).await;
 }
 
 #[cfg(test)]
 mod tests {
+    use super::{filters, model::SignatureRequest};
+    use ethers::{
+        abi::Tokenizable,
+        signers::{LocalWallet, Signer},
+        types::{Signature as EthersSignature, U256},
+    };
+    use serde_derive::{Deserialize, Serialize};
+    use sha3::{Digest, Keccak256};
+    use std::{str::FromStr, sync::Arc};
     use warp::http::StatusCode;
     use warp::test::request;
 
-    use ethers::signers::LocalWallet;
-    use std::{str::FromStr, sync::Arc};
-
-    use super::{filters, model::SignatureRequest};
+    #[derive(Deserialize, Serialize, Debug)]
+    struct SignatureResponse {
+        r: String,
+        s: String,
+        v: String,
+    }
 
     #[tokio::test]
     async fn test_bad_method() {
-        let private_key = hex::encode([3; 32]);
-        let signer = LocalWallet::from_str(&private_key).unwrap();
+        let private_key = "d4b9e7ae8585ef740d9fa79ed53eb63d59bff149fdb8c20527ad62e1e0fbba50";
+        let signer = LocalWallet::from_str(private_key).unwrap();
         let api = filters::sign(Arc::new(signer));
 
         let res = request()
@@ -64,22 +74,57 @@ mod tests {
 
         assert_eq!(res.status(), StatusCode::METHOD_NOT_ALLOWED);
     }
-    
+
     #[tokio::test]
     async fn test_sign_and_recover() {
-        let private_key = hex::encode([3; 32]);
-        let signer = LocalWallet::from_str(&private_key).unwrap();
-        let api = filters::sign(Arc::new(signer));
+        pretty_env_logger::init();
+
+        let private_key = "d4b9e7ae8585ef740d9fa79ed53eb63d59bff149fdb8c20527ad62e1e0fbba50";
+        let signer = Arc::new(LocalWallet::from_str(private_key).unwrap());
+        let api = filters::sign(signer.clone());
+
+        let request_json = make_body();
 
         let res = request()
             .method("POST")
             .path("/sign")
-            .json(&make_body())
+            .json(&request_json)
             .reply(&api)
             .await;
 
         assert_eq!(res.status(), StatusCode::OK);
+
+        let hashed_message = {
+            // We ABI encode the contents of the request
+            let tokens = [request_json.address.into_token()];
+            let message = ethers::abi::encode(&tokens);
+
+            // ... then hash them ...
+            Keccak256::digest(&message[..])
+        };
+
+        let SignatureResponse { r, s, v } = serde_json::from_slice(res.body()).unwrap();
+
+        let signature = EthersSignature {
+            r: U256::from_str_radix(&r[2..], 16).unwrap(),
+            s: U256::from_str_radix(&s[2..], 16).unwrap(),
+            v: u64::from_str_radix(&v[2..], 16).unwrap(),
+        };
+
+        let recovered = signature.recover(&hashed_message[..]).unwrap();
+
+        assert_eq!(recovered, signer.address());
     }
+
+    // fn deserialize_resp<T, B>(res: Response<B>) -> serde_json::Result<Response<T>>
+    // where
+    //     for<'de> T: serde::Deserialize<'de>,
+    //     B: AsRef<[u8]>
+    // {
+    //     let (parts, body) = res.into_parts();
+    //     let body = serde_json::from_slice(body.as_ref())?;
+    //     Ok(Response::from_parts(parts, body))
+    // }
 
     fn make_body() -> SignatureRequest {
         let address = [
@@ -88,7 +133,7 @@ mod tests {
         ];
         SignatureRequest {
             address: address.into(),
-            quantity: 2i8.into(),
+            quantity: (2 as i8).into(),
         }
     }
 }
